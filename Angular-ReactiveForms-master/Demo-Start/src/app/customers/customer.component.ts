@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 
-import { FormGroup, FormControl, FormBuilder, Validators, AbstractControl, ValidatorFn } from '@angular/forms';
+import { FormGroup, FormControl, FormBuilder, Validators, AbstractControl, ValidatorFn, FormArray } from '@angular/forms';
 import { Customer } from './customer';
+
+import { debounceTime } from 'rxjs/operators';
 
 function ratingRange(min: number, max: number): ValidatorFn {
   return (c: AbstractControl): { [key: string]: boolean } | null => {
@@ -13,6 +15,21 @@ function ratingRange(min: number, max: number): ValidatorFn {
   };
 }
 
+function emailMatcher(c: AbstractControl): { [key: string]: boolean } | null {
+  const emailControl = c.get('email');
+  const confirmControl = c.get('confirmEmail');
+
+  if (emailControl.pristine || confirmControl.pristine) {
+    return null;
+  }
+
+  if (emailControl.value === confirmControl.value) {
+    return null;
+  }
+  return { match: true };
+}
+
+
 @Component({
   selector: 'app-customer',
   templateUrl: './customer.component.html',
@@ -21,8 +38,34 @@ function ratingRange(min: number, max: number): ValidatorFn {
 export class CustomerComponent implements OnInit {
   customerForm: FormGroup;
   customer = new Customer();
+  emailMessage: string;
+
+  private validationMessages = {
+    required: 'Please enter your email address.',
+    email: 'Please enter a valid email address'
+  }
+
+  get addresses(): FormArray {
+    return <FormArray>this.customerForm.get('addresses');
+  }
 
   constructor(private fb: FormBuilder) { }
+
+  
+  buildAddress(): FormGroup {
+    return this.fb.group({
+      addressType: 'home',
+      street1: '',
+      street2: '',
+      city: '',
+      state: '',
+      zip: ''
+    })
+  }
+
+  addAddress(): void {
+    this.addresses.push(this.buildAddress());
+  }
 
   ngOnInit(): void {
     this.customerForm = this.fb.group({
@@ -40,12 +83,35 @@ export class CustomerComponent implements OnInit {
       emailGroup: this.fb.group({
         email: ['', [Validators.required, Validators.email]],
         confirmEmail: ['', Validators.required]
-      }),
+      }, { validator: emailMatcher }),
       phone: '',
       rating: [null, ratingRange(1, 5)],
       notification: 'email',
-      sendCatalog: true
+      sendCatalog: true,
+      addresses: this.fb.array([this.buildAddress()])
     });
+
+
+    this.customerForm.get('notification').valueChanges.subscribe(value => {
+      this.setNotification(value);
+    })
+
+    const emailControl = this.customerForm.get('emailGroup.email');
+    
+    emailControl.valueChanges.pipe(
+      debounceTime(1000)).subscribe
+      (value => {
+      this.setMessage(emailControl);
+    })
+  }
+
+  setMessage(c: AbstractControl): void {
+    this.emailMessage = '';
+    if((c.touched || c.dirty) && c.errors) {
+      console.log(c.errors);
+      this.emailMessage = Object.keys(c.errors).map(
+        key => this.validationMessages[key]).join(' ');
+    }
   }
 
   setNotification(notifyVia: string): void {
