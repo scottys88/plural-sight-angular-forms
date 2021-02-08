@@ -8,10 +8,10 @@
           (ngSubmit)="save()"
           [formGroup]="customerForm">
       <app-form-control-wrapper [label]="'First name'">
-      <app-text-input
-        [controlName]="'firstName'"
-        [parent]="customerForm">
-      </app-text-input>
+        <app-text-input
+          [controlName]="'firstName'"
+          [parent]="customerForm">
+        </app-text-input>
     </app-form-control-wrapper>
       <app-form-control-wrapper [label]="'Business or Private'">
             <app-radio-button
@@ -29,6 +29,15 @@
         (select)="setBusinessType($event)">
       </app-checkbox>
     </app-form-control-wrapper>
+    <button (click)="addDynamicField()">Add dynamic field</button>
+    <div formArrayName="dynamicField" *ngFor="let form of dynamicField.controls; let i = index">
+      <div [formGroupName]="i">
+        <app-text-input
+        [controlName]="'modificationValue'"
+        [parent]="form">
+      </app-text-input>
+      </div>
+    </div>
     <app-form-control-wrapper [label]="'Type of business'">
       <button class="btn btn-primary mr-3"
       type="submit"

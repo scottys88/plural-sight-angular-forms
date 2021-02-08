@@ -16,11 +16,26 @@ export class CustomerComponent implements OnInit {
 
   constructor(private fb: FormBuilder) { }
 
+  buildDynamicField(): FormGroup {
+    return this.fb.group({
+      modificationValue: ''
+    })
+  }
+
+  get dynamicField(): FormArray {
+    return <FormArray>this.customerForm.get('dynamicField');
+  }
+
+  addDynamicField(): void {
+    this.dynamicField.push(this.buildDynamicField());
+  }
+
   ngOnInit(): void {
     this.customerForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(3)]],
       whatKindOfBusiness: new FormArray([]),
       notification: ['', Validators.required],
+      dynamicField: this.fb.array([this.buildDynamicField()])
     });
 
     this.customerForm.get('notification').valueChanges.subscribe(
@@ -81,8 +96,8 @@ export class CustomerComponent implements OnInit {
       i++;
     });
     } 
-
   }
+
 
   setNotificationNew(event: boolean):void {
     console.log(event);
