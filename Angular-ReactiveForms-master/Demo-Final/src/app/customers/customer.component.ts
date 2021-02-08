@@ -1,32 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn, FormArray } from '@angular/forms';
+import { FormGroup, FormBuilder, Validators, AbstractControl, ValidatorFn, FormArray, FormControl } from '@angular/forms';
 
 import { debounceTime } from 'rxjs/operators';
 
 import { Customer } from './customer';
-
-function emailMatcher(c: AbstractControl): { [key: string]: boolean } | null {
-  const emailControl = c.get('email');
-  const confirmControl = c.get('confirmEmail');
-
-  if (emailControl.pristine || confirmControl.pristine) {
-    return null;
-  }
-
-  if (emailControl.value === confirmControl.value) {
-    return null;
-  }
-  return { match: true };
-}
-
-function ratingRange(min: number, max: number): ValidatorFn {
-  return (c: AbstractControl): { [key: string]: boolean } | null => {
-    if (c.value !== null && (isNaN(c.value) || c.value < min || c.value > max)) {
-      return { range: true };
-    }
-    return null;
-  };
-}
 
 @Component({
   selector: 'app-customer',
@@ -35,25 +12,22 @@ function ratingRange(min: number, max: number): ValidatorFn {
 })
 export class CustomerComponent implements OnInit {
   customerForm: FormGroup;
-  customer = new Customer();
-  emailMessage: string;
 
-
-  private validationMessages = {
-    required: 'Please enter your email address.',
-    email: 'Please enter a valid email address.'
-  };
 
   constructor(private fb: FormBuilder) { }
 
   ngOnInit(): void {
     this.customerForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(3)]],
-      whatKindOfBusiness: '',
-      notification: true,
+      whatKindOfBusiness: new FormArray([]),
+      notification: ['', Validators.required],
     });
 
     this.customerForm.get('notification').valueChanges.subscribe(
+      value => console.log(value)
+    );
+
+    this.customerForm.get('whatKindOfBusiness').valueChanges.subscribe(
       value => console.log(value)
     );
 
@@ -61,22 +35,17 @@ export class CustomerComponent implements OnInit {
 
   }
 
-  addAddress(): void {
-    this.addresses.push(this.buildAddress());
-  }
-
-  whatKindOfBusiness = [{
-    label: "Trade",
-    value: 'trade'
-  },
-  {
-    label: "Consultant",
-    value: 'consultant'
-  },
-  {
-    label: "Representative",
-    value: 'rep'
-  }]
+  whatKindOfBusinessOptions = [
+      { 
+        label: "Trade",
+        value: 'trade'},
+      { 
+        label: "Consultant",
+        value: 'Consultant'},
+      { 
+        label: "Medical",
+        value: 'Medical'},
+  ];
 
   yesNoOptions = [{
     label: "Yes",
@@ -85,36 +54,8 @@ export class CustomerComponent implements OnInit {
   {
     label: "No",
     value: false
-  }
-]
+  }];
 
-  buildAddress(): FormGroup {
-    return this.fb.group({
-      addressType: 'home',
-      street1: ['', Validators.required],
-      street2: '',
-      city: '',
-      state: '',
-      zip: ''
-    });
-  }
-
-  populateTestData(): void {
-    this.customerForm.patchValue({
-      firstName: 'Jack',
-      lastName: 'Harkness',
-      emailGroup: { email: 'jack@torchwood.com', confirmEmail: 'jack@torchwood.com' }
-    });
-    const addressGroup = this.fb.group({
-      addressType: 'work',
-      street1: 'Mermaid Quay',
-      street2: '',
-      city: 'Cardiff Bay',
-      state: 'CA',
-      zip: ''
-    });
-    this.customerForm.setControl('addresses', this.fb.array([addressGroup]));
-  }
 
   save(): void {
     console.log(this.customerForm);
@@ -122,20 +63,29 @@ export class CustomerComponent implements OnInit {
   }
 
   setBusinessType(event: any) {
-    console.log(event);
+    const checkbox = event.target;
+    const businessTypeArray: FormArray = this.customerForm.get('whatKindOfBusiness') as FormArray;
+
+    
+    if(checkbox.checked) {
+      businessTypeArray.push(new FormControl(event.target.value));
+    } else {
+      let i: number = 0;
+
+    businessTypeArray.controls.forEach((ctrl: FormControl) => {
+      if(ctrl.value == event.target.value) {
+        // Remove the unselected element from the arrayForm
+        businessTypeArray.removeAt(i);
+        return;
+      }
+      i++;
+    });
+    } 
+
   }
 
   setNotificationNew(event: boolean):void {
     console.log(event);
   }
-
-  setMessage(c: AbstractControl): void {
-    this.emailMessage = '';
-    if ((c.touched || c.dirty) && c.errors) {
-      this.emailMessage = Object.keys(c.errors).map(
-        key => this.validationMessages[key]).join(' ');
-    }
-  }
-
 
 }
