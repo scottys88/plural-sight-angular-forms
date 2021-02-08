@@ -3,10 +3,8 @@
         <label class="container">{{option.label}}
         <input type="checkbox" 
             [value]="option.value" 
-            (click)="onSelect(option.value)"
-            [formControlName]="controlName"
+            (click)="onSelect($event)"
             [attr.name]="controlName"
-            [attr.checked]="false"
         />
     </label>
     </ng-container>

@@ -20,7 +20,6 @@ export class CheckboxComponent implements OnInit {
   select: EventEmitter<Boolean> = new EventEmitter<boolean>();
 
   onSelect(event: boolean) {
-    console.log(event);
     this.select.emit(event);
   }
 
