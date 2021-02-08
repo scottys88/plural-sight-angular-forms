@@ -1,14 +1,13 @@
 <div [formGroup]="parent">
     <ng-container *ngFor="let option of options; let i = index">
         <label class="container">{{option.label}}
-        <input type="radio" 
+        <input type="checkbox" 
             [value]="option.value" 
             (click)="onSelect(option.value)"
             [formControlName]="controlName"
-            [attr.checked]="i === 0" 
-            [attr.name]="controlName" 
-        >
-        <span class="checkmark"></span>
+            [attr.name]="controlName"
+            [attr.checked]="false"
+        />
     </label>
     </ng-container>
 </div>

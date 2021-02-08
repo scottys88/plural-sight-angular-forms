@@ -1,6 +1,7 @@
 
-import { Component, OnInit, forwardRef } from '@angular/core';
-import { ControlValueAccessor,FormControl, FormGroup, Validators } from "@angular/forms";
+import { Component, OnInit, forwardRef, Input, Output, EventEmitter } from '@angular/core';
+import { ControlValueAccessor,NG_VALUE_ACCESSOR, NG_VALIDATORS, FormGroup,FormControl, Validator, Validators,AbstractControl, ValidationErrors } from "@angular/forms";
+
 
 @Component({
   selector: 'app-radio-button',
@@ -8,17 +9,26 @@ import { ControlValueAccessor,FormControl, FormGroup, Validators } from "@angula
   styleUrls: ['./radio-button.component.css']
 })
 export class RadioButtonComponent implements OnInit {
+  @Input()
+  parent: FormGroup;
 
-  public radioButtonOptions: FormGroup = new FormGroup({
-    radio: new FormControl(true, [Validators.required])
-  })
+  @Input()
+  controlName: string;
+
+  @Input()
+  options: any;
+
+  @Output()
+  select: EventEmitter<Boolean> = new EventEmitter<boolean>();
+
+  onSelect(event: boolean) {
+    console.log(event);
+    this.select.emit(event);
+  }
 
   constructor() { }
 
   ngOnInit(): void {
-    this.radioButtonOptions.valueChanges.subscribe(
-      data => console.log(data)
-    )
   }
 
 }

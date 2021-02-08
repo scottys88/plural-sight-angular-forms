@@ -38,9 +38,6 @@ export class CustomerComponent implements OnInit {
   customer = new Customer();
   emailMessage: string;
 
-  get addresses(): FormArray {
-    return this.customerForm.get('addresses') as FormArray;
-  }
 
   private validationMessages = {
     required: 'Please enter your email address.',
@@ -52,33 +49,44 @@ export class CustomerComponent implements OnInit {
   ngOnInit(): void {
     this.customerForm = this.fb.group({
       firstName: ['', [Validators.required, Validators.minLength(3)]],
-      lastName: ['', [Validators.required, Validators.maxLength(50)]],
-      emailGroup: this.fb.group({
-        email: ['', [Validators.required, Validators.email]],
-        confirmEmail: ['', Validators.required],
-      }, { validator: emailMatcher }),
-      phone: '',
-      notification: 'email',
-      rating: [null, ratingRange(1, 5)],
-      sendCatalog: true,
-      addresses: this.fb.array([this.buildAddress()])
+      whatKindOfBusiness: '',
+      notification: true,
     });
 
     this.customerForm.get('notification').valueChanges.subscribe(
-      value => this.setNotification(value)
+      value => console.log(value)
     );
 
-    const emailControl = this.customerForm.get('emailGroup.email');
-    emailControl.valueChanges.pipe(
-      debounceTime(1000)
-    ).subscribe(
-      value => this.setMessage(emailControl)
-    );
+    this.customerForm.valueChanges.subscribe(console.log);
+
   }
 
   addAddress(): void {
     this.addresses.push(this.buildAddress());
   }
+
+  whatKindOfBusiness = [{
+    label: "Trade",
+    value: 'trade'
+  },
+  {
+    label: "Consultant",
+    value: 'consultant'
+  },
+  {
+    label: "Representative",
+    value: 'rep'
+  }]
+
+  yesNoOptions = [{
+    label: "Yes",
+    value: true
+  },
+  {
+    label: "No",
+    value: false
+  }
+]
 
   buildAddress(): FormGroup {
     return this.fb.group({
@@ -113,6 +121,14 @@ export class CustomerComponent implements OnInit {
     console.log('Saved: ' + JSON.stringify(this.customerForm.value));
   }
 
+  setBusinessType(event: any) {
+    console.log(event);
+  }
+
+  setNotificationNew(event: boolean):void {
+    console.log(event);
+  }
+
   setMessage(c: AbstractControl): void {
     this.emailMessage = '';
     if ((c.touched || c.dirty) && c.errors) {
@@ -121,14 +137,5 @@ export class CustomerComponent implements OnInit {
     }
   }
 
-  setNotification(notifyVia: string): void {
-    const phoneControl = this.customerForm.get('phone');
-    if (notifyVia === 'text') {
-      phoneControl.setValidators(Validators.required);
-    } else {
-      phoneControl.clearValidators();
-    }
-    phoneControl.updateValueAndValidity();
-  }
 
 }
